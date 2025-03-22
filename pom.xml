@@ -7,6 +7,7 @@
     <groupId>com.antwika</groupId>
     <artifactId>boiler-api</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <url>https://github.com/antwika/boiler-api</url>
 
     <name>Boiler API</name>
     <description>Boilerplate code for a basic Spring based API</description>
