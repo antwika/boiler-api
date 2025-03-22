@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN"
+        "src/main/resources/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+    <schema-selection match-schema="PUBLIC"/>
+    <type-mapping>
+        <sql-type jdbc-type="TIMESTAMP_WITH_TIMEZONE" hibernate-type="java.time.ZonedDateTime"/>
+        <sql-type jdbc-type="-2" hibernate-type="org.hibernate.type.UUIDCharType"/>
+    </type-mapping>
+    <table name="RESOURCE">
+        <column name="ID" type="org.hibernate.type.UUIDCharType"/>
+    </table>
+</hibernate-reverse-engineering>
+

@@ -1,0 +1,28 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <changeSet author="boiler" id="1742636995-1">
+        <createTable tableName="resource">
+            <column name="id" type="RAW(16)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="resource_pkey"/>
+            </column>
+            <column name="name" type="VARCHAR(256)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <sql>
+            insert into resource values (X'c1399f23217c448db714e88fc6e9c9b1','Resource
+            name',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,null);
+        </sql>
+    </changeSet>
+</databaseChangeLog>

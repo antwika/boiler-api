@@ -1,0 +1,108 @@
+openapi: 3.0.4
+info:
+  title: Boiler API
+  version: 0.0.1
+paths:
+  /api-info:
+    get:
+      summary: Get api information
+      operationId: getApiInfoOperation
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiInfoModel"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+  /resources:
+    get:
+      summary: Get all resources
+      operationId: getResourcesOperation
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResourceModel"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+  /resources/{id}:
+    get:
+      summary: Get a resource
+      operationId: getResourceOperation
+      parameters:
+        - name: id
+          in: path
+          description: ID of resource
+          required: true
+          schema:
+            $ref: "#/components/schemas/Uuid"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceModel"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+components:
+  schemas:
+    Uuid:
+      description: UUID Version 4
+      type: string
+      maxLength: 36
+      format: uuid
+    ApiInfoModel:
+      type: object
+      properties:
+        apiName:
+          type: string
+        apiVersion:
+          type: string
+        apiReleased:
+          type: string
+        apiDocumentation:
+          type: string
+        apiStatus:
+          type: string
+      required:
+        - name
+        - version
+    ResourceModel:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        name:
+          type: string
+      required:
+        - code
+        - message
+    ErrorModel:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
