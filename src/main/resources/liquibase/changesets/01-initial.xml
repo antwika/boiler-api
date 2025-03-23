@@ -21,8 +21,8 @@
             </column>
         </createTable>
         <sql>
-            insert into resource values (X'c1399f23217c448db714e88fc6e9c9b1','Resource
-            name',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,null);
+            insert into resource
+            values (X'c1399f23217c448db714e88fc6e9c9b1', 'Resource name', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, null);
         </sql>
     </changeSet>
 </databaseChangeLog>

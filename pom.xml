@@ -141,7 +141,9 @@
                                 <typeMapping>URI=java.net.URL</typeMapping>
                             </typeMappings>
                             <configOptions>
-                                <additionalModelTypeAnnotations>@lombok.Builder</additionalModelTypeAnnotations>
+                                <additionalModelTypeAnnotations>
+                                    @lombok.Builder
+                                </additionalModelTypeAnnotations>
                                 <sourceFolder>boiler-api</sourceFolder>
                                 <useSpringBoot3>true</useSpringBoot3>
                                 <hateoas>false</hateoas>
@@ -149,6 +151,7 @@
                                 <apiPackage>com.antwika.api.generated.api</apiPackage>
                                 <modelPackage>com.antwika.api.generated.model</modelPackage>
                                 <dateLibrary>java8</dateLibrary>
+                                <generateConstructorWithAllArgs>true</generateConstructorWithAllArgs>
                             </configOptions>
                             <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
                         </configuration>

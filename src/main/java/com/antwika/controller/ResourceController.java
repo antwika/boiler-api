@@ -2,10 +2,11 @@ package com.antwika.controller;
 
 import com.antwika.api.generated.api.ResourcesApi;
 import com.antwika.api.generated.model.ResourceModel;
+import com.antwika.exception.ResourceNotFoundException;
 import com.antwika.service.ResourceService;
 import com.antwika.util.LinkHeaderUtil;
+import com.antwika.util.ModelMapper;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.MultiValueMap;
 
 @Controller
 public class ResourceController implements ResourcesApi {
@@ -33,24 +33,40 @@ public class ResourceController implements ResourcesApi {
   }
 
   @Override
+  public ResponseEntity<ResourceModel> postResourceOperation(ResourceModel resourceModel) {
+
+    final var resource = ModelMapper.modelToEntity(resourceModel);
+    final var savedResource = resourceService.createResource(resource);
+    final var savedResourceModel = ModelMapper.entityToModel(savedResource);
+
+    final var headers = new HttpHeaders();
+
+    headers.add(
+        HttpHeaders.LINK,
+        LinkHeaderUtil.format("self", String.format("%s%s/resources", baseUrl, contextPath)));
+
+    headers.add(
+        HttpHeaders.LOCATION,
+        String.format(
+            "%s%s/resources/%s", baseUrl, contextPath, savedResourceModel.getId().toString()));
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(headers)
+        .body(savedResourceModel);
+  }
+
+  @Override
   public ResponseEntity<List<ResourceModel>> getResourcesOperation() {
     final var resources = resourceService.getResources();
 
-    final var model =
-        resources.stream()
-            .map(
-                resource ->
-                    ResourceModel.builder().id(resource.getId()).name(resource.getName()).build())
-            .toList();
+    final var model = resources.stream().map(ModelMapper::entityToModel).toList();
 
-    final var headers =
-        HttpHeaders.readOnlyHttpHeaders(
-            MultiValueMap.fromMultiValue(
-                Map.of(
-                    "Link",
-                    List.of(
-                        LinkHeaderUtil.format(
-                            "self", String.format("%s%s/resources", baseUrl, contextPath))))));
+    final var headers = new HttpHeaders();
+
+    headers.add(
+        HttpHeaders.LINK,
+        LinkHeaderUtil.format("self", String.format("%s%s/resources", baseUrl, contextPath)));
 
     return ResponseEntity.status(HttpStatus.OK)
         .contentType(MediaType.APPLICATION_JSON)
@@ -60,26 +76,36 @@ public class ResourceController implements ResourcesApi {
 
   @Override
   public ResponseEntity<ResourceModel> getResourceOperation(UUID id) {
-    final var optionalResource = resourceService.getResource(id);
+    final var resource =
+        resourceService.getResource(id).orElseThrow(ResourceNotFoundException::new);
 
-    if (optionalResource.isEmpty()) {
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
+    final var model = ModelMapper.entityToModel(resource);
 
-    final var resource = optionalResource.get();
+    final var headers = new HttpHeaders();
 
-    final var model = ResourceModel.builder().id(resource.getId()).name(resource.getName()).build();
+    headers.add(
+        HttpHeaders.LINK,
+        LinkHeaderUtil.format(
+            "self", String.format("%s%s/resources/%s", baseUrl, contextPath, id.toString())));
 
-    final var headers =
-        HttpHeaders.readOnlyHttpHeaders(
-            MultiValueMap.fromMultiValue(
-                Map.of(
-                    "Link",
-                    List.of(
-                        LinkHeaderUtil.format(
-                            "self",
-                            String.format(
-                                "%s%s/resources/%s", baseUrl, contextPath, id.toString()))))));
+    return ResponseEntity.status(HttpStatus.OK)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(headers)
+        .body(model);
+  }
+
+  @Override
+  public ResponseEntity<ResourceModel> deleteResourceOperation(UUID id) {
+    final var deletedResource = resourceService.deleteResource(id);
+
+    final var model = ModelMapper.entityToModel(deletedResource);
+
+    final var headers = new HttpHeaders();
+
+    headers.add(
+        HttpHeaders.LINK,
+        LinkHeaderUtil.format(
+            "self", String.format("%s%s/resources/%s", baseUrl, contextPath, id.toString())));
 
     return ResponseEntity.status(HttpStatus.OK)
         .contentType(MediaType.APPLICATION_JSON)

@@ -7,6 +7,7 @@ import com.antwika.api.generated.entities.Resource;
 import com.antwika.api.generated.model.ResourceModel;
 import com.antwika.service.ResourceService;
 import com.antwika.util.LinkHeaderUtil;
+import com.antwika.util.ModelMapper;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,23 +19,80 @@ import org.springframework.http.ResponseEntity;
 
 public class ResourceControllerTest {
   @Test
+  public void postResourceOperation() {
+    // Arrange
+    final var mockResourceService = mock(ResourceService.class);
+    final var mockResourceModel = mock(ResourceModel.class);
+    final var mockResource = mock(Resource.class);
+    final var mockSavedResource = mock(Resource.class);
+    final var mockSavedResourceModel = mock(ResourceModel.class);
+    final var mockSavedResourceModelId = mock(UUID.class);
+    final var mockResponseEntityBodyBuilder = mock(ResponseEntity.BodyBuilder.class);
+    final var mockResponseEntity = mock(ResponseEntity.class);
+
+    when(mockResourceService.createResource(mockResource)).thenReturn(mockSavedResource);
+    when(mockSavedResourceModel.getId()).thenReturn(mockSavedResourceModelId);
+    when(mockSavedResourceModelId.toString()).thenReturn("mock-saved-resource-model-id");
+
+    when(mockResponseEntityBodyBuilder.headers(any(HttpHeaders.class)))
+        .thenReturn(mockResponseEntityBodyBuilder);
+    when(mockResponseEntityBodyBuilder.contentType(MediaType.APPLICATION_JSON))
+        .thenReturn(mockResponseEntityBodyBuilder);
+    when(mockResponseEntityBodyBuilder.body(mockSavedResourceModel)).thenReturn(mockResponseEntity);
+
+    try (final var staticModelMapper = mockStatic(ModelMapper.class);
+        final var staticLinkHeaderUtil = mockStatic(LinkHeaderUtil.class);
+        final var constructHttpHeaders = mockConstruction(HttpHeaders.class);
+        final var staticResponseEntity = mockStatic(ResponseEntity.class)) {
+
+      staticModelMapper
+          .when(() -> ModelMapper.modelToEntity(mockResourceModel))
+          .thenReturn(mockResource);
+
+      staticModelMapper
+          .when(() -> ModelMapper.entityToModel(mockSavedResource))
+          .thenReturn(mockSavedResourceModel);
+
+      staticLinkHeaderUtil
+          .when(() -> LinkHeaderUtil.format("self", "http://localhost:8080/v0/resources"))
+          .thenReturn("example-link-self-value");
+
+      staticResponseEntity
+          .when(() -> ResponseEntity.status(HttpStatus.CREATED))
+          .thenReturn(mockResponseEntityBodyBuilder);
+
+      // Act
+      final var controller =
+          new ResourceController(mockResourceService, "http://localhost:8080", "/v0");
+      final var responseEntity = controller.postResourceOperation(mockResourceModel);
+
+      // Assert
+      assertEquals(1, constructHttpHeaders.constructed().size());
+
+      final var mockHttpHeaders = constructHttpHeaders.constructed().get(0);
+
+      verify(mockHttpHeaders, times(2)).add(any(), any());
+      verify(mockHttpHeaders, times(1)).add(HttpHeaders.LINK, "example-link-self-value");
+      verify(mockHttpHeaders, times(1))
+          .add(
+              HttpHeaders.LOCATION,
+              "http://localhost:8080/v0/resources/mock-saved-resource-model-id");
+
+      assertEquals(mockResponseEntity, responseEntity);
+    }
+  }
+
+  @Test
   public void getResourcesOperation() {
     // Arrange
     final var mockResourceService = mock(ResourceService.class);
     final var mockResource = mock(Resource.class);
-    final var mockResourceId = mock(UUID.class);
-    final var mockResourceName = "mock-resource-name";
-    final var mockResourceBuilder = mock(ResourceModel.ResourceModelBuilder.class);
     final var mockResourceModel = mock(ResourceModel.class);
     final var mockResponseEntityBodyBuilder = mock(ResponseEntity.BodyBuilder.class);
     final var mockResponseEntity = mock(ResponseEntity.class);
 
     when(mockResourceService.getResources()).thenReturn(List.of(mockResource));
-    when(mockResource.getId()).thenReturn(mockResourceId);
-    when(mockResource.getName()).thenReturn(mockResourceName);
-    when(mockResourceBuilder.id(mockResourceId)).thenReturn(mockResourceBuilder);
-    when(mockResourceBuilder.name(mockResourceName)).thenReturn(mockResourceBuilder);
-    when(mockResourceBuilder.build()).thenReturn(mockResourceModel);
+
     when(mockResponseEntityBodyBuilder.headers(any(HttpHeaders.class)))
         .thenReturn(mockResponseEntityBodyBuilder);
     when(mockResponseEntityBodyBuilder.contentType(MediaType.APPLICATION_JSON))
@@ -42,27 +100,37 @@ public class ResourceControllerTest {
     when(mockResponseEntityBodyBuilder.body(List.of(mockResourceModel)))
         .thenReturn(mockResponseEntity);
 
-    try (final var staticResourceModel = mockStatic(ResourceModel.class);
-        final var staticResponseEntity = mockStatic(ResponseEntity.class);
-        final var staticLinkHeaderUtil = mockStatic(LinkHeaderUtil.class)) {
+    try (final var staticModelMapper = mockStatic(ModelMapper.class);
+        final var staticLinkHeaderUtil = mockStatic(LinkHeaderUtil.class);
+        final var constructHttpHeaders = mockConstruction(HttpHeaders.class);
+        final var staticResponseEntity = mockStatic(ResponseEntity.class)) {
 
-      staticResourceModel.when(ResourceModel::builder).thenReturn(mockResourceBuilder);
-
-      staticResponseEntity
-          .when(() -> ResponseEntity.status(HttpStatus.OK))
-          .thenReturn(mockResponseEntityBodyBuilder);
+      staticModelMapper
+          .when(() -> ModelMapper.entityToModel(mockResource))
+          .thenReturn(mockResourceModel);
 
       staticLinkHeaderUtil
           .when(() -> LinkHeaderUtil.format("self", "http://localhost:8080/v0/resources"))
           .thenReturn("example-link-self-value");
 
+      staticResponseEntity
+          .when(() -> ResponseEntity.status(HttpStatus.OK))
+          .thenReturn(mockResponseEntityBodyBuilder);
+
       // Act
       final var controller =
           new ResourceController(mockResourceService, "http://localhost:8080", "/v0");
-      final var response = controller.getResourcesOperation();
+      final var responseEntity = controller.getResourcesOperation();
 
       // Assert
-      assertEquals(mockResponseEntity, response);
+      assertEquals(1, constructHttpHeaders.constructed().size());
+
+      final var mockHttpHeaders = constructHttpHeaders.constructed().get(0);
+
+      verify(mockHttpHeaders, times(1)).add(any(), any());
+      verify(mockHttpHeaders, times(1)).add(HttpHeaders.LINK, "example-link-self-value");
+
+      assertEquals(mockResponseEntity, responseEntity);
     }
   }
 
@@ -70,86 +138,110 @@ public class ResourceControllerTest {
   public void getResourceOperation() {
     // Arrange
     final var mockResourceService = mock(ResourceService.class);
-    final var mockResourceId = mock(UUID.class);
-    final var mockResourceName = "example-resource-name";
     final var mockResource = mock(Resource.class);
-    final var mockResourceBuilder = mock(ResourceModel.ResourceModelBuilder.class);
+    final var mockResourceId = mock(UUID.class);
     final var mockResourceModel = mock(ResourceModel.class);
     final var mockResponseEntityBodyBuilder = mock(ResponseEntity.BodyBuilder.class);
     final var mockResponseEntity = mock(ResponseEntity.class);
 
+    when(mockResourceId.toString()).thenReturn("mock-resource-id");
     when(mockResourceService.getResource(mockResourceId)).thenReturn(Optional.of(mockResource));
-    when(mockResourceId.toString()).thenReturn("example-resource-id");
-    when(mockResource.getId()).thenReturn(mockResourceId);
-    when(mockResource.getName()).thenReturn(mockResourceName);
-    when(mockResourceBuilder.id(mockResourceId)).thenReturn(mockResourceBuilder);
-    when(mockResourceBuilder.name(mockResourceName)).thenReturn(mockResourceBuilder);
-    when(mockResourceBuilder.build()).thenReturn(mockResourceModel);
-    when(mockResponseEntityBodyBuilder.contentType(MediaType.APPLICATION_JSON))
-        .thenReturn(mockResponseEntityBodyBuilder);
+
     when(mockResponseEntityBodyBuilder.headers(any(HttpHeaders.class)))
+        .thenReturn(mockResponseEntityBodyBuilder);
+    when(mockResponseEntityBodyBuilder.contentType(MediaType.APPLICATION_JSON))
         .thenReturn(mockResponseEntityBodyBuilder);
     when(mockResponseEntityBodyBuilder.body(mockResourceModel)).thenReturn(mockResponseEntity);
 
-    try (final var staticResource = mockStatic(ResourceModel.class);
-        final var staticResponseEntity = mockStatic(ResponseEntity.class);
-        final var staticLinkHeaderUtil = mockStatic(LinkHeaderUtil.class)) {
+    try (final var staticModelMapper = mockStatic(ModelMapper.class);
+        final var staticLinkHeaderUtil = mockStatic(LinkHeaderUtil.class);
+        final var constructHttpHeaders = mockConstruction(HttpHeaders.class);
+        final var staticResponseEntity = mockStatic(ResponseEntity.class)) {
 
-      staticResource.when(ResourceModel::builder).thenReturn(mockResourceBuilder);
+      staticModelMapper
+          .when(() -> ModelMapper.entityToModel(mockResource))
+          .thenReturn(mockResourceModel);
+
+      staticLinkHeaderUtil
+          .when(
+              () ->
+                  LinkHeaderUtil.format(
+                      "self", "http://localhost:8080/v0/resources/mock-resource-id"))
+          .thenReturn("example-link-self-value");
 
       staticResponseEntity
           .when(() -> ResponseEntity.status(HttpStatus.OK))
           .thenReturn(mockResponseEntityBodyBuilder);
 
-      staticLinkHeaderUtil
-          .when(
-              () ->
-                  LinkHeaderUtil.format(
-                      "self", "http://localhost:8080/v0/resources/example-resource-id"))
-          .thenReturn("example-link-self-value");
-
       // Act
       final var controller =
           new ResourceController(mockResourceService, "http://localhost:8080", "/v0");
       final var responseEntity = controller.getResourceOperation(mockResourceId);
 
       // Assert
+      assertEquals(1, constructHttpHeaders.constructed().size());
+
+      final var mockHttpHeaders = constructHttpHeaders.constructed().get(0);
+
+      verify(mockHttpHeaders, times(1)).add(any(), any());
+      verify(mockHttpHeaders, times(1)).add(HttpHeaders.LINK, "example-link-self-value");
+
       assertEquals(mockResponseEntity, responseEntity);
     }
   }
 
   @Test
-  public void getResource_whenResourceNotFound_returnHttpNotFoundResponseEntity() {
+  public void deleteResourceOperation() {
     // Arrange
     final var mockResourceService = mock(ResourceService.class);
+    final var mockResource = mock(Resource.class);
     final var mockResourceId = mock(UUID.class);
+    final var mockResourceModel = mock(ResourceModel.class);
     final var mockResponseEntityBodyBuilder = mock(ResponseEntity.BodyBuilder.class);
     final var mockResponseEntity = mock(ResponseEntity.class);
 
-    when(mockResourceService.getResource(mockResourceId)).thenReturn(Optional.empty());
-    when(mockResourceId.toString()).thenReturn("example-resource-id");
-    when(mockResponseEntityBodyBuilder.build()).thenReturn(mockResponseEntity);
+    when(mockResourceId.toString()).thenReturn("mock-resource-id");
+    when(mockResourceService.deleteResource(mockResourceId)).thenReturn(mockResource);
 
-    try (final var staticResponseEntity = mockStatic(ResponseEntity.class);
-        final var staticLinkHeaderUtil = mockStatic(LinkHeaderUtil.class)) {
+    when(mockResponseEntityBodyBuilder.headers(any(HttpHeaders.class)))
+        .thenReturn(mockResponseEntityBodyBuilder);
+    when(mockResponseEntityBodyBuilder.contentType(MediaType.APPLICATION_JSON))
+        .thenReturn(mockResponseEntityBodyBuilder);
+    when(mockResponseEntityBodyBuilder.body(mockResourceModel)).thenReturn(mockResponseEntity);
+
+    try (final var staticModelMapper = mockStatic(ModelMapper.class);
+        final var staticLinkHeaderUtil = mockStatic(LinkHeaderUtil.class);
+        final var constructHttpHeaders = mockConstruction(HttpHeaders.class);
+        final var staticResponseEntity = mockStatic(ResponseEntity.class)) {
+
+      staticModelMapper
+          .when(() -> ModelMapper.entityToModel(mockResource))
+          .thenReturn(mockResourceModel);
 
       staticLinkHeaderUtil
           .when(
               () ->
                   LinkHeaderUtil.format(
-                      "self", "http://localhost:8080/v0/resources/example-resource-id"))
+                      "self", "http://localhost:8080/v0/resources/mock-resource-id"))
           .thenReturn("example-link-self-value");
 
       staticResponseEntity
-          .when(() -> ResponseEntity.status(HttpStatus.NOT_FOUND))
+          .when(() -> ResponseEntity.status(HttpStatus.OK))
           .thenReturn(mockResponseEntityBodyBuilder);
 
       // Act
       final var controller =
           new ResourceController(mockResourceService, "http://localhost:8080", "/v0");
-      final var responseEntity = controller.getResourceOperation(mockResourceId);
+      final var responseEntity = controller.deleteResourceOperation(mockResourceId);
 
       // Assert
+      assertEquals(1, constructHttpHeaders.constructed().size());
+
+      final var mockHttpHeaders = constructHttpHeaders.constructed().get(0);
+
+      verify(mockHttpHeaders, times(1)).add(any(), any());
+      verify(mockHttpHeaders, times(1)).add(HttpHeaders.LINK, "example-link-self-value");
+
       assertEquals(mockResponseEntity, responseEntity);
     }
   }

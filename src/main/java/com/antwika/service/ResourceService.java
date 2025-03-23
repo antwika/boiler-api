@@ -1,19 +1,17 @@
 package com.antwika.service;
 
 import com.antwika.api.generated.entities.Resource;
+import com.antwika.exception.ResourceNotFoundException;
 import com.antwika.repository.ResourceRepository;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ResourceService {
-  private static final Logger logger = LoggerFactory.getLogger(ResourceService.class);
-
   private final ResourceRepository resourceRepository;
 
   @Autowired
@@ -26,7 +24,18 @@ public class ResourceService {
   }
 
   public Optional<Resource> getResource(UUID id) {
-    logger.debug("Getting resource by id: {}", id);
     return resourceRepository.findById(id);
+  }
+
+  public Resource createResource(Resource resource) {
+    resource.setId(UUID.randomUUID());
+    return resourceRepository.save(resource);
+  }
+
+  public Resource deleteResource(UUID id) {
+    final var resource =
+        resourceRepository.findById(id).orElseThrow(ResourceNotFoundException::new);
+    resource.setDeleted(ZonedDateTime.now());
+    return resourceRepository.save(resource);
   }
 }
