@@ -54,7 +54,7 @@ public class ResourceControllerTest {
           .thenReturn(mockSavedResourceModel);
 
       staticLinkHeaderUtil
-          .when(() -> LinkHeaderUtil.format("self", "http://localhost:8080/v0/resources"))
+          .when(() -> LinkHeaderUtil.getSelfLink(any()))
           .thenReturn("example-link-self-value");
 
       staticResponseEntity
@@ -106,12 +106,10 @@ public class ResourceControllerTest {
         final var staticResponseEntity = mockStatic(ResponseEntity.class)) {
 
       staticModelMapper
-          .when(() -> ModelMapper.entityToModel(mockResource))
-          .thenReturn(mockResourceModel);
+          .when(() -> ModelMapper.entitiesToModels(List.of(mockResource)))
+          .thenReturn(List.of(mockResourceModel));
 
-      staticLinkHeaderUtil
-          .when(() -> LinkHeaderUtil.format("self", "http://localhost:8080/v0/resources"))
-          .thenReturn("example-link-self-value");
+      staticLinkHeaderUtil.when(LinkHeaderUtil::getSelfLink).thenReturn("example-link-self-value");
 
       staticResponseEntity
           .when(() -> ResponseEntity.status(HttpStatus.OK))
@@ -163,10 +161,7 @@ public class ResourceControllerTest {
           .thenReturn(mockResourceModel);
 
       staticLinkHeaderUtil
-          .when(
-              () ->
-                  LinkHeaderUtil.format(
-                      "self", "http://localhost:8080/v0/resources/mock-resource-id"))
+          .when(() -> LinkHeaderUtil.getSelfLink(any()))
           .thenReturn("example-link-self-value");
 
       staticResponseEntity
@@ -219,10 +214,7 @@ public class ResourceControllerTest {
           .thenReturn(mockResourceModel);
 
       staticLinkHeaderUtil
-          .when(
-              () ->
-                  LinkHeaderUtil.format(
-                      "self", "http://localhost:8080/v0/resources/mock-resource-id"))
+          .when(() -> LinkHeaderUtil.getSelfLink(any()))
           .thenReturn("example-link-self-value");
 
       staticResponseEntity

@@ -41,9 +41,7 @@ public class ResourceController implements ResourcesApi {
 
     final var headers = new HttpHeaders();
 
-    headers.add(
-        HttpHeaders.LINK,
-        LinkHeaderUtil.format("self", String.format("%s%s/resources", baseUrl, contextPath)));
+    headers.add(HttpHeaders.LINK, LinkHeaderUtil.getSelfLink(resourceModel));
 
     headers.add(
         HttpHeaders.LOCATION,
@@ -60,18 +58,16 @@ public class ResourceController implements ResourcesApi {
   public ResponseEntity<List<ResourceModel>> getResourcesOperation() {
     final var resources = resourceService.getResources();
 
-    final var model = resources.stream().map(ModelMapper::entityToModel).toList();
+    final var models = ModelMapper.entitiesToModels(resources);
 
     final var headers = new HttpHeaders();
 
-    headers.add(
-        HttpHeaders.LINK,
-        LinkHeaderUtil.format("self", String.format("%s%s/resources", baseUrl, contextPath)));
+    headers.add(HttpHeaders.LINK, LinkHeaderUtil.getSelfLink());
 
     return ResponseEntity.status(HttpStatus.OK)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(headers)
-        .body(model);
+        .body(models);
   }
 
   @Override
@@ -83,10 +79,7 @@ public class ResourceController implements ResourcesApi {
 
     final var headers = new HttpHeaders();
 
-    headers.add(
-        HttpHeaders.LINK,
-        LinkHeaderUtil.format(
-            "self", String.format("%s%s/resources/%s", baseUrl, contextPath, id.toString())));
+    headers.add(HttpHeaders.LINK, LinkHeaderUtil.getSelfLink(id));
 
     return ResponseEntity.status(HttpStatus.OK)
         .contentType(MediaType.APPLICATION_JSON)
@@ -102,10 +95,7 @@ public class ResourceController implements ResourcesApi {
 
     final var headers = new HttpHeaders();
 
-    headers.add(
-        HttpHeaders.LINK,
-        LinkHeaderUtil.format(
-            "self", String.format("%s%s/resources/%s", baseUrl, contextPath, id.toString())));
+    headers.add(HttpHeaders.LINK, LinkHeaderUtil.getSelfLink(id));
 
     return ResponseEntity.status(HttpStatus.OK)
         .contentType(MediaType.APPLICATION_JSON)
