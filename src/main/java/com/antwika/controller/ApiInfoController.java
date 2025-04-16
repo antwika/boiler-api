@@ -5,15 +5,10 @@ import com.antwika.api.generated.model.ApiInfoModel;
 import com.antwika.util.LinkHeaderUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.MultiValueMap;
-
-import java.util.List;
-import java.util.Map;
 
 @Controller
 public class ApiInfoController implements ApiInfoApi {
@@ -54,14 +49,7 @@ public class ApiInfoController implements ApiInfoApi {
             .apiStatus(appProjectStatus)
             .build();
 
-    final var headers =
-        HttpHeaders.readOnlyHttpHeaders(
-            MultiValueMap.fromMultiValue(
-                Map.of(
-                    "Link",
-                    List.of(
-                        LinkHeaderUtil.format(
-                            "self", String.format("%s%s/api-info", baseUrl, contextPath))))));
+    final var headers = LinkHeaderUtil.createHeaders();
 
     return ResponseEntity.status(HttpStatus.OK)
         .contentType(MediaType.APPLICATION_JSON)

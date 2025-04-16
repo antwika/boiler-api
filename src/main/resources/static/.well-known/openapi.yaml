@@ -26,6 +26,17 @@ paths:
     get:
       summary: Get all resources
       operationId: getResourcesOperation
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: The number of items to skip before starting to collect the result set
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: The number of items to skip before starting to collect the result set
       responses:
         "200":
           description: Successful operation

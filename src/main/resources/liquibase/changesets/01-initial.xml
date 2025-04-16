@@ -22,7 +22,15 @@
         </createTable>
         <sql>
             insert into resource
-            values (X'c1399f23217c448db714e88fc6e9c9b1', 'Resource name', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, null);
+            values (X'c1399f23217c448db714e88fc6e9c9b1', 'Resource name 1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, null);
+            insert into resource
+            values (X'c1399f23217c448db714e88fc6e9c9b2', 'Resource name 2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, null);
+            insert into resource
+            values (X'c1399f23217c448db714e88fc6e9c9b3', 'Resource name 3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, null);
+            insert into resource
+            values (X'c1399f23217c448db714e88fc6e9c9b4', 'Resource name 4', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, null);
+            insert into resource
+            values (X'c1399f23217c448db714e88fc6e9c9b5', 'Resource name 5', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, null);
         </sql>
     </changeSet>
 </databaseChangeLog>

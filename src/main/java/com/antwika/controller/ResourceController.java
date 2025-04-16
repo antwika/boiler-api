@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,14 +39,7 @@ public class ResourceController implements ResourcesApi {
     final var savedResource = resourceService.createResource(resource);
     final var savedResourceModel = ModelMapper.entityToModel(savedResource);
 
-    final var headers = new HttpHeaders();
-
-    headers.add(HttpHeaders.LINK, LinkHeaderUtil.getSelfLink(resourceModel));
-
-    headers.add(
-        HttpHeaders.LOCATION,
-        String.format(
-            "%s%s/resources/%s", baseUrl, contextPath, savedResourceModel.getId().toString()));
+    final var headers = LinkHeaderUtil.createHeadersWithLocation(savedResourceModel.getId().toString(), resourceModel);
 
     return ResponseEntity.status(HttpStatus.CREATED)
         .contentType(MediaType.APPLICATION_JSON)
@@ -55,14 +48,17 @@ public class ResourceController implements ResourcesApi {
   }
 
   @Override
-  public ResponseEntity<List<ResourceModel>> getResourcesOperation() {
-    final var resources = resourceService.getResources();
+  public ResponseEntity<List<ResourceModel>> getResourcesOperation(Integer page, Integer limit) {
+
+    final var pageable = Pageable.ofSize(limit).withPage(page);
+
+    final var resourcesPage = resourceService.getResources(pageable);
+
+    final var resources = resourcesPage.getContent();
 
     final var models = ModelMapper.entitiesToModels(resources);
 
-    final var headers = new HttpHeaders();
-
-    headers.add(HttpHeaders.LINK, LinkHeaderUtil.getSelfLink());
+    final var headers = LinkHeaderUtil.createHeadersWithPagination(resourcesPage, page, limit);
 
     return ResponseEntity.status(HttpStatus.OK)
         .contentType(MediaType.APPLICATION_JSON)
@@ -77,9 +73,7 @@ public class ResourceController implements ResourcesApi {
 
     final var model = ModelMapper.entityToModel(resource);
 
-    final var headers = new HttpHeaders();
-
-    headers.add(HttpHeaders.LINK, LinkHeaderUtil.getSelfLink(id));
+    final var headers = LinkHeaderUtil.createHeaders(id);
 
     return ResponseEntity.status(HttpStatus.OK)
         .contentType(MediaType.APPLICATION_JSON)
@@ -93,9 +87,7 @@ public class ResourceController implements ResourcesApi {
 
     final var model = ModelMapper.entityToModel(deletedResource);
 
-    final var headers = new HttpHeaders();
-
-    headers.add(HttpHeaders.LINK, LinkHeaderUtil.getSelfLink(id));
+    final var headers = LinkHeaderUtil.createHeaders(id);
 
     return ResponseEntity.status(HttpStatus.OK)
         .contentType(MediaType.APPLICATION_JSON)

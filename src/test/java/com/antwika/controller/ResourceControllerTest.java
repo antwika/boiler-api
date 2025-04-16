@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -118,7 +119,7 @@ public class ResourceControllerTest {
       // Act
       final var controller =
           new ResourceController(mockResourceService, "http://localhost:8080", "/v0");
-      final var responseEntity = controller.getResourcesOperation();
+      final var responseEntity = controller.getResourcesOperation(1, 2);
 
       // Assert
       assertEquals(1, constructHttpHeaders.constructed().size());
